@@ -70,7 +70,6 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
       - slack/notify:
-          channel: $SLACK_DEFAULT_CHANNEL
           custom: |
             {
               "blocks": [
@@ -86,7 +85,7 @@ jobs:
                 }
               ]
             }
-          event: fail
+          event: always
 
   test-frontend:
     docker:
@@ -345,3 +344,7 @@ workflows:
       #    requires: [smoke-test]
       #- cleanup:
       #    requires: [cloudfront-update]
+  send-notification:
+    jobs:
+      - notify:
+          context: slack-secrets
