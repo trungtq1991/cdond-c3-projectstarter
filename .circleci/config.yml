@@ -346,5 +346,5 @@ workflows:
       #    requires: [cloudfront-update]
   send-notification:
     jobs:
-      - notify:
+      - build-backend:
           context: slack-secrets
