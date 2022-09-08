@@ -15,6 +15,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            aws s3 rm s3://udapeople-"<<parameters.Workflow_ID>>" --recursive
+            aws s3 rb s3://udapeople-"<<parameters.Workflow_ID>>" --force
             aws cloudformation delete-stack \
               --stack-name udapeople-frontend-<<parameters.Workflow_ID>>
             aws cloudformation delete-stack \
@@ -38,7 +40,6 @@ commands:
                 npm install
                 npm run migration:revert
               fi
-
             
 jobs:
   build-frontend:
@@ -138,7 +139,6 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      # Checkout code from git
       - checkout
       - run:
           name: Install tar and zip
@@ -269,23 +269,44 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-#  deploy-backend:
-#    docker:
-#      # Docker image here that supports Ansible
-#    steps:
-#      # Checkout code from git
-#      # Add ssh keys with fingerprint
-#      # attach workspace
-#      - run:
-#          name: Install dependencies
-#          command: |
-#            # your code here
-#      - run:
-#          name: Deploy backend
-#          command: |
-#            # your code here
-#      # Here's where you will add some code to rollback on failure  
-#
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.12
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["66:f4:4d:73:2e:6d:cb:42:18:cb:66:45:2e:33:45:0c"]
+      - run:
+          name: Install dependencies
+          command: |
+          command: |
+            apt update
+            apt install tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install Ansible
+          command: |
+            sudo apt update
+            sudo apt install software-properties-common -y
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install ansible -y
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend # echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            npm i
+            npm run build
+            cd ..
+            # Zip the directory
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      - revert-migrations
+      - destroy-environment
+
 #  smoke-test:
 #    docker:
 #      # Lightweight Docker image 
@@ -343,7 +364,6 @@ jobs:
 #              # your code here
 #            fi 
             
-
 workflows:
   default:
     jobs:
@@ -368,8 +388,8 @@ workflows:
           requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
-      #- deploy-backend:
-      #    requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       #- smoke-test:
       #    requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update:
