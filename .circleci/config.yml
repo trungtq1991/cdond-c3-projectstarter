@@ -246,7 +246,7 @@ jobs:
             yum install sudo -y
             yum install -y tar
             yum install -y gzip
-            curl -sL https://rpm.nodesource.com/setup_10.x | sudo bash -
+            curl -sL https://rpm.nodesource.com/setup_13.x | sudo bash -
             yum install -y nodejs
       - attach_workspace:
           at: ~/
@@ -279,11 +279,16 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-          command: |
             apt update
             apt install tar gzip
       - attach_workspace:
           at: ~/
+      - run:
+          name: Install aws dependencies
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Install Ansible
           command: |
