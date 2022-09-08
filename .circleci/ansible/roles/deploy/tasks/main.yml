@@ -1,14 +1,20 @@
 ---
+- name: Install dependencies
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
 - name: Upgrade packages
   become: yes
   apt:
     upgrade: yes
 
-- name: Install dependencies
-  become: true
+- name: Remove dependencies that are no longer required
+  become: yes
   apt:
-    name: ["nodejs", "npm"]
-    update_cache: yes
+    autoremove: yes
 
 - name: Install pm2
   become: true
@@ -18,32 +24,37 @@
     production: yes
     state: present
 
-- name: Create directory
+- name: Create Directory
   file:
     path: /home/ubuntu/backend
     state: directory
 
-- name: Copy backend dist files web server
-  become: yes
+- name: Copy backend files to home server
   copy:
-    src:  /root/project/artifact.tar.gz
-    dest: /home/ubuntu/backend/artifact.tar.gz
+    src: /root/project/backend
+    dest: /home/ubuntu/
 
-- name: Extract backend files
-  become: yes
-  shell: |
-    cd /home/ubuntu/backend
-    tar -vxf artifact.tar.gz
-    rm artifact.tar.gz
-
-- name: Build
+- name: Copy backend files to root server
   become: true
+  copy:
+    src: /root/project/backend
+    dest: /root
+    force: no
+
+- name: Install Node
   shell: |
     cd /home/ubuntu/backend
     npm install
+    npm install --only=dev
+
+- name: Build package
+  shell: |
+    cd /home/ubuntu/backend
     npm run build
+    cat .env
+    npm run prestart:prod
     
 - name: Start PM2
   shell: |
     cd /home/ubuntu/backend
-    pm2 start npm --name backend -- start
+    pm2 start npm --name "backend" -- run start
