@@ -1,91 +1,51 @@
-- name: Upgrade packages
-  become: true
-  apt:
-    upgrade: "yes"
-
-- name: Install dependence
-  become: true
-  apt:
-    name: ["nodejs", "npm"]
-    update_cache: yes
-
-- name: Add nodejs apt key
-  become: true
-  apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
-    state: present
-
-- name: Add nodejs 13.x
-  become: true
-  apt_repository:
-    repo: deb https://deb.nodesource.com/node_13.x bionic main
-    update_cache: yes
-
-- name: Install nodejs
-  become: true
-  apt:
-    update_cache: yes
-    name: nodejs
-    state: present
-
-- name: Download zsh installer
-  get_url:
-    url: https://deb.nodesource.com/setup_13.x
-    dest: /tmp/setup_13.sh
-
-- name: Execute the setup_13.sh
-  become: true
-  become_user: root
-  shell: chmod 777 setup_13.sh & bash setup_13.sh
-  args:
-    chdir: /tmp/
-
-- name: "upgrade"
-  become: true
-  command: apt-get install -y nodejs
-  args:
-    chdir: /root
-
-- name: Install pm2
-  become: true
-  npm:
-    name: pm2
-    path: /home/ubuntu/npm
-    global: yes
-    production: yes
-    state: present
-
-- name: Creates directory
-  file:
-    path: /home/ubuntu/backend
-    state: directory
-
-- name: Copy backend files to home server
+- name: Copy backend dist files web server
   copy:
-    src: /root/project/backend
+    src: /root/project/artifact.tar.gz
+    dest: /home/ubuntu/artifact.tar.gz
+
+- name: Uncompress Backend
+  shell: |
+    cd /home/ubuntu
+    tar xvzf artifact.tar.gz -C .
+    ls -la
+- name: "Copy package.json to server"
+  become: true
+  copy:
+    src: /root/project/backend/package.json
     dest: /home/ubuntu/
+    owner: ubuntu
 
-- name: Copy backend files to root server
-  become: true
-  copy:
-    src: /root/project/backend
-    dest: /root
-    force: no
+- name: "Install backend dependencies using NPM"
+  command: npm install --production
+  args:
+    chdir: /home/ubuntu
 
-- name: Install Node
+- name: "Start backend with pm2"
   shell: |
-    cd /home/ubuntu/backend
-    npm install
-    npm install --only=dev
+    export ENVIRONMENT=production
+    export NODE_ENV=production
+    export TYPEORM_HOST="{{ lookup('env', 'TYPEORM_HOST') }}"
+    export TYPEORM_ENTITIES="{{ lookup('env', 'TYPEORM_ENTITIES') }}"
+    export TYPEORM_USERNAME="{{ lookup('env', 'TYPEORM_USERNAME') }}"
+    export TYPEORM_PASSWORD="{{ lookup('env', 'TYPEORM_PASSWORD') }}"
+    export TYPEORM_DATABASE="{{ lookup('env', 'TYPEORM_DATABASE') }}"
+    cd src
+    pm2 start npm --name backend -- start
+  args:
+    chdir: /home/ubuntu
 
-- name: Build package
+- name: "Set pm2 start as service"
+  become: yes
   shell: |
-    cd /home/ubuntu/backend
-    npm run build
-    cat .env
-    npm run prestart:prod
-
-- name: Start pm2
-  shell: |
-    cd /home/ubuntu/backend
-    pm2 start npm --name "backend" -- run start
+    env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
+    
+- name: "clear npm cache"  
+  command: npm cache clean --force
+  
+- name: "delete Node_Modules"  
+  command: rm -rf node_modules
+  args:
+    chdir: /home/ubuntu
+  
+- name: "Reinstall NPM"  
+  command: npm install  
