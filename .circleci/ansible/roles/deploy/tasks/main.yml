@@ -1,27 +1,27 @@
-- name: "upgrade packages."
+- name: Upgrade packages
   become: true
   apt:
     upgrade: "yes"
 
-- name: "install dependencies."
+- name: Install dependence
   become: true
   apt:
     name: ["nodejs", "npm"]
     update_cache: yes
 
-- name: "Add nodejs apt key"
+- name: Add nodejs apt key
   become: true
   apt_key:
     url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
     state: present
 
-- name: "Add nodejs 13.x ppa for apt repo"
+- name: Add nodejs 13.x
   become: true
   apt_repository:
     repo: deb https://deb.nodesource.com/node_13.x bionic main
     update_cache: yes
 
-- name: "Install nodejs"
+- name: Install nodejs
   become: true
   apt:
     update_cache: yes
@@ -46,7 +46,7 @@
   args:
     chdir: /root
 
-- name: "install pm2"
+- name: Install pm2
   become: true
   npm:
     name: pm2
@@ -85,13 +85,7 @@
     cat .env
     npm run prestart:prod
 
-- name: Start PM2
+- name: Start pm2
   shell: |
     cd /home/ubuntu/backend
     pm2 start npm --name "backend" -- run start
-
-    #- name: start pm2 for dist/main.js
-    #  become: no
-    #  shell: pm2 start main.js
-    #  args:
-    #    chdir: /home/ubuntu/backend/dist
