@@ -1,22 +1,22 @@
 ---
-- name: "install dependencies."
+- name: Upgrade packages
+  become: true
+  apt:
+    upgrade: "yes"
+    
+- name: Install dependencies
   become: true
   apt:
     name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
 
-- name: "upgrade packages"
-  become: yes
-  apt:
-    upgrade: yes
-
-- name: remove dependencies that are no longer required
+- name: Remove old dependencies
   become: yes
   apt:
     autoremove: yes
 
-- name: "install pm2"
+- name: Install pm2
   become: true
   npm:
     name: pm2
@@ -29,12 +29,12 @@
     path: /home/ubuntu/backend
     state: directory
 
-- name: Copy backend files to home server
+- name: Copy backend files to home
   copy:
     src: /root/project/backend
     dest: /home/ubuntu/
 
-- name: Copy backend files to root server
+- name: Copy backend files to root
   become: true
   copy:
     src: /root/project/backend
@@ -46,13 +46,15 @@
     cd /home/ubuntu/backend
     npm install
     npm install --only=dev
+
 - name: Build package
   shell: |
     cd /home/ubuntu/backend
     npm run build
     cat .env
     npm run prestart:prod
-- name: Start PM2
+
+- name: Start pm2
   shell: |
     cd /home/ubuntu/backend
     pm2 start npm --name "backend" -- run start
