@@ -1,51 +1,58 @@
-- name: Copy backend dist files web server
-  copy:
-    src: /root/project/artifact.tar.gz
-    dest: /home/ubuntu/artifact.tar.gz
+---
+- name: "install dependencies."
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
 
-- name: Uncompress Backend
-  shell: |
-    cd /home/ubuntu
-    tar xvzf artifact.tar.gz -C .
-    ls -la
-- name: "Copy package.json to server"
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: yes
+
+- name: remove dependencies that are no longer required
+  become: yes
+  apt:
+    autoremove: yes
+
+- name: "install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: Create directory
+  file:
+    path: /home/ubuntu/backend
+    state: directory
+
+- name: Copy backend files to home server
+  copy:
+    src: /root/project/backend
+    dest: /home/ubuntu/
+
+- name: Copy backend files to root server
   become: true
   copy:
-    src: /root/project/backend/package.json
-    dest: /home/ubuntu/
-    owner: ubuntu
+    src: /root/project/backend
+    dest: /root
+    force: no
 
-- name: "Install backend dependencies using NPM"
-  command: npm install --production
-  args:
-    chdir: /home/ubuntu
-
-- name: "Start backend with pm2"
+- name: Install Node
   shell: |
-    export ENVIRONMENT=production
-    export NODE_ENV=production
-    export TYPEORM_HOST="{{ lookup('env', 'TYPEORM_HOST') }}"
-    export TYPEORM_ENTITIES="{{ lookup('env', 'TYPEORM_ENTITIES') }}"
-    export TYPEORM_USERNAME="{{ lookup('env', 'TYPEORM_USERNAME') }}"
-    export TYPEORM_PASSWORD="{{ lookup('env', 'TYPEORM_PASSWORD') }}"
-    export TYPEORM_DATABASE="{{ lookup('env', 'TYPEORM_DATABASE') }}"
-    cd src
-    pm2 start npm --name backend -- start
-  args:
-    chdir: /home/ubuntu
-
-- name: "Set pm2 start as service"
-  become: yes
+    cd /home/ubuntu/backend
+    npm install
+    npm install --only=dev
+- name: Build package
   shell: |
-    env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
-    
-- name: "clear npm cache"  
-  command: npm cache clean --force
-  
-- name: "delete Node_Modules"  
-  command: rm -rf node_modules
-  args:
-    chdir: /home/ubuntu
-  
-- name: "Reinstall NPM"  
-  command: npm install  
+    cd /home/ubuntu/backend
+    npm run build
+    cat .env
+    npm run prestart:prod
+- name: Start PM2
+  shell: |
+    cd /home/ubuntu/backend
+    pm2 start npm --name "backend" -- run start

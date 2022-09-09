@@ -9,6 +9,8 @@
     - ansible_host_key_checking: false
     - ansible_stdout_callback: yaml
   environment:
+    - ENVIRONEMT: "production"
+    - NODE_ENV: "{{ lookup('env','NODE_ENV') }}"
     - TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
     - TYPEORM_PORT: 5432
     - TYPEORM_HOST: "{{ lookup('env','TYPEORM_HOST') }}"
