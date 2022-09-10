@@ -327,13 +327,13 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update npm
-            apk add --update curl
+            apk add --update tar
             apk add --update gzip
             apk add --update nodejs
-            apk add --update py3-pip
-            apk add --update tar
-            pip3 install awscli
+            apk add --update npm
+            apk add --update curl
+            /usr/local/bin/python -m pip install --upgrade pip
+            pip install awscli
       - run:
           name: Backend smoke test
           command: |
@@ -421,8 +421,8 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+      #- smoke-test:
+      #    requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update:
       #    requires: [smoke-test]
       #- cleanup:
