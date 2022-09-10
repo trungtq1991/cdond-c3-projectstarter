@@ -198,8 +198,6 @@ jobs:
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
-          environment:
-            ANSIBLE_HOST_KEY_CHECKING: false
       - destroy-environment      
 
   run-migrations:
@@ -318,8 +316,6 @@ jobs:
             BACKEND_IP=`cat inventory.txt | head -2 | tail -1`
             echo "BACKEND_IP: ${BACKEND_IP}"
             ansible-playbook -i inventory.txt deploy-backend.yml
-          environment:
-            ANSIBLE_HOST_KEY_CHECKING: false
       - destroy-environment
       - revert-migrations
 
@@ -425,8 +421,8 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+      #- smoke-test:
+      #    requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update:
       #    requires: [smoke-test]
       #- cleanup:
