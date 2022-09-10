@@ -29,6 +29,19 @@
     path: /home/ubuntu/backend
     state: directory
 
+- name: Copy backend dist files web server
+  become: yes
+  copy:
+    src:  /root/project/artifact.tar.gz
+    dest: /home/ubuntu/backend/artifact.tar.gz
+
+- name: Extract backend files
+  become: yes
+  shell: |
+    cd /home/ubuntu/backend
+    tar -vxf artifact.tar.gz
+    rm artifact.tar.gz
+
 - name: Copy backend files to home
   copy:
     src: /root/project/backend
