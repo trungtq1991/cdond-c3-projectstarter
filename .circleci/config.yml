@@ -300,7 +300,11 @@ jobs:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             cat backend/.env
+            tar -C backend -czvf artifact.tar.gz .
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
             BACKEND_IP=`cat inventory.txt | head -2 | tail -1`
             echo "BACKEND_IP: ${BACKEND_IP}"
             ansible-playbook -i inventory.txt deploy-backend.yml
