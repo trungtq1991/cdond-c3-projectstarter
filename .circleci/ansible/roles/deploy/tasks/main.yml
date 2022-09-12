@@ -42,6 +42,14 @@
     tar -vxf artifact.tar.gz
     rm artifact.tar.gz
 
+- name: Install npm & Switch to 13.8.0 to build
+  become: true
+  shell: |
+    cd /home/ubuntu/backend
+    npm install -g n
+    n 13.8.0
+    chown -R ubuntu:ubuntu /home/ubuntu/backend
+
 - name: Build
   become: true
   shell: |
