@@ -1,9 +1,9 @@
 URL 01 - https://github.com/trungtq1991/cdond-c3-projectstarter
 
-URL 02 - http://udapeople-1647d08.s3-website-us-east-1.amazonaws.com/#/employees
+URL 02 - http://udapeople-07f0ad1.s3-website-us-east-1.amazonaws.com/#/employees
 
-URL 03 - d1s7cey4nz1a9q.cloudfront.net
+URL 03 - d3irgcmg6mq4af.cloudfront.net
 
-URL 04 - http://54.167.30.220:3030/api/status
+URL 04 - http://3.80.88.156:3030/api/status
 
-URL 05 - 
+URL 05 - http://ec2-3-93-179-22.compute-1.amazonaws.com:9090/targets
